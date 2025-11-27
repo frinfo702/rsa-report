@@ -54,10 +54,9 @@ long long find_next_prime(long long number) {
     return next_prime_number;
 }
 
-secretKey generate_secret_key(string studentId) {
-    long long mln = stoll(&studentId.at(studentId.size() - 1));
-    long long num1 = mln + 20;
-    long long num2 = mln + 30;
+secretKey generate_secret_key(long long seed) {
+    long long num1 = seed + 20;
+    long long num2 = seed + 30;
     long long nextPrimeNumber1 = find_next_prime(num1);
     long long nextPrimeNumber2 = find_next_prime(num2);
     secretKey secretKey = {nextPrimeNumber1, nextPrimeNumber2};
@@ -95,7 +94,7 @@ int main(int argc, char **argv) {
     if (argc < 2) return 1;
 
     long long plainNum =  stoll(argv[1]);
-    secretKey secretKey = {11, 13};
+    secretKey secretKey = generate_secret_key(1);
     publicKey publicKey = generate_public_key(secretKey);
     secretKey.d = find_d(secretKey,  publicKey);
 
