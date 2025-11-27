@@ -7,19 +7,29 @@
 using namespace std;
 
 struct publicKey {
-    int n;
-    int e;
+    long long n;
+    long long e = 977; // p*qと互いに素になるようにある程度大きい素数
 };
 
 struct secretKey {
-    int p;
-    int q;
-    int d = 0;
+    long long p;
+    long long q;
+    long long d = 0;
 };
 
+long long modPow(long long base, long long exp, long long mod) {
+    long long res = 1;
+    base %= mod;
+    while (exp > 0) {
+        if (exp % 2 == 1) res = (res * base) % mod;
+        base = (base * base) % mod;
+        exp /= 2;
+    }
+    return res;
+}
 
-bool is_prime_number(int number) {
-    int divider = 3;
+bool is_prime_number(long long number) {
+    long long divider = 3;
 
     if (number % 2 == 0) {
         return false;
@@ -35,34 +45,33 @@ bool is_prime_number(int number) {
     return true;
 }
 
-int find_next_prime(int number) {
-    int initialNum = number;
+long long find_next_prime(long long number) {
+    long long initialNum = number;
     while (!is_prime_number(number) || initialNum == number) {
         number += 1;
     }
-    int next_prime_number = number;
+    long long next_prime_number = number;
     return next_prime_number;
 }
 
 secretKey generate_secret_key(string studentId) {
-    int mln = atoi(&studentId.at(studentId.size() - 1));
-    int num1 = mln + 20;
-    int num2 = mln + 30;
-    int nextPrimeNumber1 = find_next_prime(num1);
-    int nextPrimeNumber2 = find_next_prime(num2);
+    long long mln = stoll(&studentId.at(studentId.size() - 1));
+    long long num1 = mln + 20;
+    long long num2 = mln + 30;
+    long long nextPrimeNumber1 = find_next_prime(num1);
+    long long nextPrimeNumber2 = find_next_prime(num2);
     secretKey secretKey = {nextPrimeNumber1, nextPrimeNumber2};
     return secretKey;
 }
 
 publicKey generate_public_key(secretKey secretKey) {
-    int n = secretKey.p * secretKey.q;
-    int e = 5;
-    return {n, e};
+    long long n = secretKey.p * secretKey.q;
+    return {n};
 }
 
-int find_d(secretKey secretKey , publicKey publicKey) {
-    int d = secretKey.d;
-    int lambda = lcm(secretKey.p - 1, secretKey.q - 1);
+long long find_d(secretKey secretKey , publicKey publicKey) {
+    long long d = secretKey.d;
+    long long lambda = lcm(secretKey.p - 1, secretKey.q - 1);
 
     while ((publicKey.e * d) % lambda != 1) {
         d += 1;
@@ -71,27 +80,27 @@ int find_d(secretKey secretKey , publicKey publicKey) {
     return d;
 }
 
-int encrypt(int plainNum, publicKey publicKey) {
-    int encrypted = (int)(pow(plainNum, publicKey.e)) % publicKey.n;
+long long encrypt(long long plainNum, publicKey publicKey) {
+    long long encrypted = (long long)(modPow(plainNum, publicKey.e, publicKey.n)) % publicKey.n;
 
     return encrypted;
 }
 
-int decrypt(int encrypted, publicKey publicKey, secretKey secretKey) {
-    return (int)(pow(encrypted, secretKey.d)) % publicKey.n;
+long long decrypt(long long encrypted, publicKey publicKey, secretKey secretKey) {
+    return (long long)(modPow(encrypted, secretKey.d, publicKey.n)) % publicKey.n;
 }
 
 
 int main(int argc, char **argv) {
     if (argc < 2) return 1;
 
-    int plainNum =  atoi(argv[1]);
+    long long plainNum =  stoll(argv[1]);
     secretKey secretKey = {11, 13};
     publicKey publicKey = generate_public_key(secretKey);
     secretKey.d = find_d(secretKey,  publicKey);
 
-    int encrypted = encrypt(plainNum, publicKey);
-    int decrypted = decrypt(encrypted, publicKey, secretKey);
+    long long encrypted = encrypt(plainNum, publicKey);
+    long long decrypted = decrypt(encrypted, publicKey, secretKey);
     cout << decrypted << endl;
 
     return 0;
