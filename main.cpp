@@ -2,12 +2,21 @@
 #include <iostream>
 #include <cstdlib>
 #include <string>
-#include <vector>
 #include <numeric>
 
 using namespace std;
 
-const int PUBLIC_E = 5;
+struct publicKey {
+    int n;
+    int e;
+};
+
+struct secretKey {
+    int p;
+    int q;
+    int d = 0;
+};
+
 
 bool is_prime_number(int number) {
     int divider = 3;
@@ -35,40 +44,55 @@ int find_next_prime(int number) {
     return next_prime_number;
 }
 
-vector<int> generate_secret_key(string studentId) {
+secretKey generate_secret_key(string studentId) {
     int mln = atoi(&studentId.at(studentId.size() - 1));
     int num1 = mln + 20;
     int num2 = mln + 30;
     int nextPrimeNumber1 = find_next_prime(num1);
     int nextPrimeNumber2 = find_next_prime(num2);
-    vector<int> primePair = {nextPrimeNumber1, nextPrimeNumber2};
-    return primePair;
+    secretKey secretKey = {nextPrimeNumber1, nextPrimeNumber2};
+    return secretKey;
 }
 
-int encrypt(vector<int> secretKey, int plainNum) {
-    int publicN = accumulate(secretKey.begin(), secretKey.end(), 1.0, std::multiplies<int>());
-    int secretP = secretKey.at(0);
-    int secretQ = secretKey.at(1);
-    int lambda = lcm(secretP - 1, secretQ - 1);
+publicKey generate_public_key(secretKey secretKey) {
+    int n = secretKey.p * secretKey.q;
+    int e = 5;
+    return {n, e};
+}
 
-    int d = 1;
-    while (gcd(PUBLIC_E,  d) % lambda != 1) {
+int find_d(secretKey secretKey , publicKey publicKey) {
+    int d = secretKey.d;
+    int lambda = lcm(secretKey.p - 1, secretKey.q - 1);
+
+    while ((publicKey.e * d) % lambda != 1) {
         d += 1;
     }
 
-    int encrypted = int(pow(plainNum, PUBLIC_E)) % publicN;
+    return d;
+}
+
+int encrypt(int plainNum, publicKey publicKey) {
+    int encrypted = (int)(pow(plainNum, publicKey.e)) % publicKey.n;
+
     return encrypted;
 }
 
+int decrypt(int encrypted, publicKey publicKey, secretKey secretKey) {
+    return (int)(pow(encrypted, secretKey.d)) % publicKey.n;
+}
+
+
 int main(int argc, char **argv) {
-    // string studentId = argv[1];
+    if (argc < 2) return 1;
 
-    int plainNum = 11;
+    int plainNum =  atoi(argv[1]);
+    secretKey secretKey = {11, 13};
+    publicKey publicKey = generate_public_key(secretKey);
+    secretKey.d = find_d(secretKey,  publicKey);
 
-    // vector<int> secretKey = generate_secret_key(studentId);
-    vector<int> secretKey = {5, 7};
-    int encrypted = encrypt(secretKey, plainNum);
-    cout << encrypted << endl;
-    cout << plainNum << endl;
+    int encrypted = encrypt(plainNum, publicKey);
+    int decrypted = decrypt(encrypted, publicKey, secretKey);
+    cout << decrypted << endl;
+
     return 0;
 }

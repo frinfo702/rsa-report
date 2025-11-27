@@ -16,7 +16,10 @@ assert() {
     fi
 }
 
-assert 26002301791 "23
-33"
+assert 60 60
+assert 2 2
+assert 30 30
+assert 17 17
+assert 91 91
 
 echo OK
